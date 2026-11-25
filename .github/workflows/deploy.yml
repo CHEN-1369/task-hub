@@ -1,0 +1,35 @@
+name: Deploy TaskHub
+
+on:
+  push:
+    branches: [ main ] # 监听 main 分支的推送
+
+permissions:
+  contents: write # 允许向 gh-pages 分支推送
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22 # vite 8 要求 ^20.19.0 或 >=22.12.0
+          cache: npm
+
+      - name: Install and Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html # 刷新 /login 等深链接时不返回 404
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist # 打包产物目录
+          branch: gh-pages # 部署到这个分支
